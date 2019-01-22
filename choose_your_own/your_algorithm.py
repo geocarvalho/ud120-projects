@@ -3,6 +3,11 @@
 import matplotlib.pyplot as plt
 from prep_terrain_data import makeTerrainData
 from class_vis import prettyPicture
+from time import time
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 
 features_train, labels_train, features_test, labels_test = makeTerrainData()
 
@@ -24,13 +29,22 @@ plt.scatter(grade_slow, bumpy_slow, color = "r", label="slow")
 plt.legend()
 plt.xlabel("bumpiness")
 plt.ylabel("grade")
-plt.show()
+#plt.show()
 ################################################################################
 
 
 ### your code here!  name your classifier object clf if you want the 
 ### visualization code (prettyPicture) to show you the decision boundary
-
+# clf = AdaBoostClassifier()
+clf = RandomForestClassifier(n_estimators=10000, max_depth=2, max_features=None)
+t0 = time()
+clf.fit(features_train, labels_train)
+print("tempo de treinamento:", round(time()-t0, 3), "s")
+t0 = time()
+pred = clf.predict(features_test)
+print("tempo de predicao:", round(time()-t0, 3), "s")
+acc = accuracy_score(pred, labels_test)
+print(acc)
 
 
 

@@ -4,7 +4,7 @@ import random
 import numpy
 import matplotlib.pyplot as plt
 import pickle
-from sklearn.linear_model import LinearRegression
+
 from outlier_cleaner import outlierCleaner
 
 
@@ -25,11 +25,11 @@ ages_train, ages_test, net_worths_train, net_worths_test = train_test_split(ages
 
 ### fill in a regression here!  Name the regression object reg so that
 ### the plotting code below works, and you can see what your regression looks like
-reg = LinearRegression().fit(ages_train, net_worths_train)
-slope = reg.coef_[0][0]
-r_square = reg.score(ages_test, net_worths_test)
-print('slope ', slope)
-print('r-square ', r_square)
+from sklearn import linear_model
+reg = linear_model.LinearRegression()
+reg.fit(ages_train, net_worths_train)
+print "Slope ", reg.coef_
+print "Score ", reg.score(ages_test, net_worths_test)
 
 try:
     plt.plot(ages, reg.predict(ages), color="blue")
@@ -48,12 +48,6 @@ except NameError:
     print "your regression object doesn't exist, or isn't name reg"
     print "can't make predictions to use in identifying outliers"
 
-
-
-
-
-
-
 ### only run this code if cleaned_data is returning data
 if len(cleaned_data) > 0:
     ages, net_worths, errors = zip(*cleaned_data)
@@ -68,15 +62,13 @@ if len(cleaned_data) > 0:
         print "you don't seem to have regression imported/created,"
         print "   or else your regression object isn't named reg"
         print "   either way, only draw the scatter plot of the cleaned data"
-    slope = reg.coef_[0][0]
-    r_square = reg.score(ages_test, net_worths_test)
-    print('new slope ', slope)
-    print('new r-square ', r_square)
     plt.scatter(ages, net_worths)
     plt.xlabel("ages")
     plt.ylabel("net worths")
     plt.show()
 
+    print "New Slope Without Outliers ", reg.coef_
+    print "New Score Without Outliers ", reg.score(ages_test, net_worths_test)
 
 else:
     print "outlierCleaner() is returning an empty list, no refitting to be done"
