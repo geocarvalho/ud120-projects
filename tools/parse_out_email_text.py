@@ -35,13 +35,11 @@ def parseOutText(f):
         ### space between each stemmed word)
         stemmer = SnowballStemmer("english")
         words_lst = []
-        text_lst = text_string.strip().split(" ")
+        text_lst = text_string.strip().split()
         for word in text_lst:
             if word != '':
                 words_lst.append(stemmer.stem(word))
         words = ' '.join(words_lst)
-
-
 
     return words
 
