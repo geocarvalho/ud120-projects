@@ -27,7 +27,7 @@ vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5,
                              stop_words='english')
 features_train = vectorizer.fit_transform(features_train)
 features_test  = vectorizer.transform(features_test).toarray()
-
+words = vectorizer.get_feature_names()
 
 ### a classic way to overfit is to use a small number
 ### of data points and a large number of features;
@@ -44,14 +44,12 @@ clf = DecisionTreeClassifier()
 clf.fit(features_train, labels_train)
 pred = clf.predict(features_test)
 acc = accuracy_score(labels_test, pred)
-print(acc)
-importance = list(clf.feature_importances_)
-max_importance = max(importance)
-print(max_importance)
-print(type(max_importance))
-print(importance.index(max_importance))
-for i in importance:
-    if i > max_importance:
-        print(i)
+print('Accuracy: ', acc)
 
+# Important features:
+for index, feature in enumerate(clf.feature_importances_):
+        if feature > 0.2:
+                print('feature index: ', index)
+                print('feature: ', feature)
+                print('feature name: ', words[index])
 
