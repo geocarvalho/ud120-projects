@@ -6,6 +6,7 @@ sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tester
@@ -66,10 +67,30 @@ features_list.append('from_poi_average')
 features_list.append('shared_poi_average')
 
 ### Replace any NaN financial data with a 0
-df.fillna(value= 0, inplace=True)
+df.fillna(value=0, inplace=True)
 
 ### Store to my_dataset for easy export below.
 my_dataset = df.to_dict(orient='index')
+
+### Return statistics
+non_poi, poi = df.poi.value_counts()
+lines, columns = df.shape[0], df.shape[1]
+print('number of data points: %s' % (lines * columns))
+print('number of POIs and non-POIs: %s, %s' % (poi, non_poi))
+print('number of features used: %s' % len(features_list))
+print('features with missing values: see plot')
+count_nan = []
+for label in df.columns:
+    miss_val = (df[label] == 0).sum(axis=0)
+    if df[label].dtype == 'bool':
+        count_nan.append(0)
+    else:
+        count_nan.append(miss_val)
+plt.bar(df.columns, count_nan)
+plt.xlabel('Data columns', fontsize=10)
+plt.ylabel('Proportion of missing data', fontsize=10)
+plt.xticks(df.columns, df.columns, rotation=90, fontsize=8)
+plt.show()
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
@@ -87,8 +108,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
 # clf = GaussianNB()
-# clf = DecisionTreeClassifier(min_samples_split=30)
-clf = AdaBoostClassifier(n_estimators=30)
+clf = DecisionTreeClassifier(min_samples_split=30)
+# clf = AdaBoostClassifier(n_estimators=30)
 # clf = SVC(kernel='linear', gamma='auto')
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
