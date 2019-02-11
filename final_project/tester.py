@@ -26,7 +26,8 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
     data = featureFormat(dataset, feature_list, sort_keys = True)
     labels, features = targetFeatureSplit(data)
     # print(labels)
-    # print(features)
+    print 'Features list size is ', len(feature_list)
+    print 'Features list: \n', feature_list
     cv = StratifiedShuffleSplit(folds, random_state = 42)
     true_negatives = 0
     false_negatives = 0

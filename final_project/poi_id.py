@@ -7,13 +7,13 @@ from tester import dump_classifier_and_data, test_classifier
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn.feature_selection import SelectPercentile
 from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
-from sklearn.svm import SVC
 import pandas as pd
 import numpy as np
 import tester
@@ -127,18 +127,21 @@ labels, features = targetFeatureSplit(data)
 percentile = list(range(1, 100))
 min_split = list(range(2, 100))
 estimator = list(range(10,100,10))
-Cs = [0.1, 1., 10., 100., 1000., 10000.]
+neighbors = list(range(1,30))
+distances = list(range(1, 5))
+
 
 # Create pipeline to test feature selection and the algorithms
-# SVM
-print 'Starting pipeline for SVM model'
-pipeline_svc = Pipeline([('select', SelectPercentile()), ('svc', SVC(kernel='rbf'))])
-grids_svc = GridSearchCV(pipeline_svc, {'select__percentile': percentile, 'svc__C': Cs},
-cv=5, iid=0, scoring='f1')
-# Variables for SVM
-grids_svc, selected_percentile_svc = return_grid_result(grids_svc, features, labels)
-selected_C = grids_svc.best_params_['svc__C']
-best_score_svc = grids_svc.best_score_
+# KNN
+print 'Starting pipeline for KNN model'
+pipeline_knn = Pipeline([('select', SelectPercentile()), ('knn', KNeighborsClassifier())])
+grids_knn = GridSearchCV(pipeline_knn, {'select__percentile': percentile, 
+'knn__n_neighbors': neighbors, 'knn__p': distances}, cv=5, iid=0, scoring='f1')
+# Variables for KNN
+grids_knn, selected_percentile_knn = return_grid_result(grids_knn, features, labels)
+selected_neighbors = grids_knn.best_params_['knn__n_neighbors']
+selected_distance = grids_knn.best_params_['knn__p']
+best_score_knn = grids_knn.best_score_
 
 # DecisionTree
 print 'Starting pipeline for DecisionTree model'
@@ -193,14 +196,15 @@ features_train, features_test, labels_train, labels_test = \
     train_test_split(features, labels, test_size=0.3, random_state=42)
 
 # Check which had the highest F1-score
-if (best_score_svc > best_score_dt) and (best_score_svc > best_score_gnb) and (
-    best_score_svc > best_score_ab):
-    print 'The best model was SVM'
-    # Create SVM's model
-    clf = SVC(kernel='rbf', C=selected_C)
+if (best_score_knn > best_score_dt) and (best_score_knn > best_score_gnb) and (
+    best_score_knn > best_score_ab):
+    print 'The best model was KNN'
+    # Create KNNs's model
+    clf = KNeighborsClassifier(n_neighbors=selected_neighbors,
+    p=selected_distance)
     # Select the best percentile
     mask, features_train_selected, features_test_selected = select_best_perc(
-        selected_percentile_svc, features_train, labels_train)
+        selected_percentile_knn, features_train, labels_train)
     # Fit and predict with the selected data
     clf, pred = fit_and_predict(
         features_train_selected, labels_train, features_test_selected, clf)
