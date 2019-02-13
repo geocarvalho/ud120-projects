@@ -9,9 +9,6 @@ from sklearn.feature_selection import SelectPercentile
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -39,13 +36,16 @@ def fit_and_predict(features_train_selected, labels_train, features_test_selecte
 def select_best_perc(selected_percentile, features_train, labels_train):
     ''' Select features with SelectPercentile '''
     select = SelectPercentile(percentile=selected_percentile)
+    # Fit data
     select.fit(features_train, labels_train)
+    # Get features score
+    feature_scores = np.array(select.scores_)
     mask = select.get_support()
     # Transform features and labels
     features_train_selected = select.transform(features_train)
     features_test_selected = select.transform(features_test)
 
-    return mask, features_train_selected, features_test_selected
+    return mask, features_train_selected, features_test_selected, feature_scores
 
 
 
@@ -104,14 +104,14 @@ df.drop(axis=0, labels=['TOTAL','THE TRAVEL AGENCY IN THE PARK'], inplace=True)
 
 ### Task 3: Create new feature(s)
 # Add the new email features to the dataframe
-df['to_poi_average'] = df['from_poi_to_this_person'].astype(int) / df['to_messages'].astype(int)
-df['from_poi_average'] = df['from_this_person_to_poi'].astype(int) / df['from_messages'].astype(int)
-df['shared_poi_average'] = df['shared_receipt_with_poi'].astype(int) / df['to_messages'].astype(int)
+# df['to_poi_average'] = df['from_poi_to_this_person'].astype(int) / df['to_messages'].astype(int)
+# df['from_poi_average'] = df['from_this_person_to_poi'].astype(int) / df['from_messages'].astype(int)
+# df['shared_poi_average'] = df['shared_receipt_with_poi'].astype(int) / df['to_messages'].astype(int)
 
-# Add the new features to the features list
-features_list.append('to_poi_average')
-features_list.append('from_poi_average')
-features_list.append('shared_poi_average')
+# # Add the new features to the features list
+# features_list.append('to_poi_average')
+# features_list.append('from_poi_average')
+# features_list.append('shared_poi_average')
 
 ### Replace any NaN financial data with a 0
 df.fillna(value=0, inplace=True)
@@ -143,37 +143,37 @@ selected_neighbors = grids_knn.best_params_['knn__n_neighbors']
 selected_distance = grids_knn.best_params_['knn__p']
 best_score_knn = grids_knn.best_score_
 
-# DecisionTree
-print 'Starting pipeline for DecisionTree model'
-pipeline_dt = Pipeline([('select', SelectPercentile()), ('dt', DecisionTreeClassifier())])
-grids_dt = GridSearchCV(pipeline_dt, {
-    'select__percentile': percentile, 'dt__min_samples_split': min_split}, cv=5, iid=0, 
-    scoring='f1')
-# Variables for DecisitonTree
-grids_dt, selected_percentile_dt = return_grid_result(grids_dt, features, labels)
-selected_min_samples_split = grids_dt.best_params_[
-    'dt__min_samples_split']
-best_score_dt = grids_dt.best_score_
+# # DecisionTree
+# print 'Starting pipeline for DecisionTree model'
+# pipeline_dt = Pipeline([('select', SelectPercentile()), ('dt', DecisionTreeClassifier())])
+# grids_dt = GridSearchCV(pipeline_dt, {
+#     'select__percentile': percentile, 'dt__min_samples_split': min_split}, cv=5, iid=0, 
+#     scoring='f1')
+# # Variables for DecisitonTree
+# grids_dt, selected_percentile_dt = return_grid_result(grids_dt, features, labels)
+# selected_min_samples_split = grids_dt.best_params_[
+#     'dt__min_samples_split']
+# best_score_dt = grids_dt.best_score_
 
-# GaussianNB
-print 'Starting pipeline for GaussianNB model'
-pipeline_gnb = Pipeline([('select', SelectPercentile()), ('gnb', GaussianNB())])
-grids_gnb = GridSearchCV(pipeline_gnb, {
-    'select__percentile': percentile}, cv=5, iid=0, scoring='f1')
-# Variables for GaussianNB
-grids_gnb, selected_percentile_gnb = return_grid_result(grids_gnb, features, labels)
-best_score_gnb = grids_gnb.best_score_
+# # GaussianNB
+# print 'Starting pipeline for GaussianNB model'
+# pipeline_gnb = Pipeline([('select', SelectPercentile()), ('gnb', GaussianNB())])
+# grids_gnb = GridSearchCV(pipeline_gnb, {
+#     'select__percentile': percentile}, cv=5, iid=0, scoring='f1')
+# # Variables for GaussianNB
+# grids_gnb, selected_percentile_gnb = return_grid_result(grids_gnb, features, labels)
+# best_score_gnb = grids_gnb.best_score_
 
-# AdaBoostClassifier
-print 'Starting pipeline for AdaBoostClassifier model'
-pipeline_ab = Pipeline([('select', SelectPercentile()), ('ab', AdaBoostClassifier())])
-grids_ab = GridSearchCV(pipeline_ab, {
-    'select__percentile': percentile, 'ab__n_estimators': estimator}, cv=5, iid=0,
-    scoring='f1')
-# Variables for AdaBoostClassifier
-grids_ab, selected_percentile_ab = return_grid_result(grids_ab, features, labels)
-selected_n_estimators = grids_ab.best_params_['ab__n_estimators']
-best_score_ab = grids_ab.best_score_
+# # AdaBoostClassifier
+# print 'Starting pipeline for AdaBoostClassifier model'
+# pipeline_ab = Pipeline([('select', SelectPercentile()), ('ab', AdaBoostClassifier())])
+# grids_ab = GridSearchCV(pipeline_ab, {
+#     'select__percentile': percentile, 'ab__n_estimators': estimator}, cv=5, iid=0,
+#     scoring='f1')
+# # Variables for AdaBoostClassifier
+# grids_ab, selected_percentile_ab = return_grid_result(grids_ab, features, labels)
+# selected_n_estimators = grids_ab.best_params_['ab__n_estimators']
+# best_score_ab = grids_ab.best_score_
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -196,54 +196,57 @@ features_train, features_test, labels_train, labels_test = \
     train_test_split(features, labels, test_size=0.3, random_state=42)
 
 # Check which had the highest F1-score
-if (best_score_knn > best_score_dt) and (best_score_knn > best_score_gnb) and (
-    best_score_knn > best_score_ab):
-    print 'The best model was KNN'
-    # Create KNNs's model
-    clf = KNeighborsClassifier(n_neighbors=selected_neighbors,
-    p=selected_distance)
-    # Select the best percentile
-    mask, features_train_selected, features_test_selected = select_best_perc(
-        selected_percentile_knn, features_train, labels_train)
-    # Fit and predict with the selected data
-    clf, pred = fit_and_predict(
-        features_train_selected, labels_train, features_test_selected, clf)
-elif (best_score_dt > best_score_gnb) and (best_score_dt > best_score_ab):
-    print 'The best model was DecisionTree'
-    # Create Decision Tree's model
-    clf = DecisionTreeClassifier(
-        min_samples_split=selected_min_samples_split)
-    # Select the best percentile
-    mask, features_train_selected, features_test_selected = select_best_perc(
-        selected_percentile_dt, features_train, labels_train)
-    # Fit and predict with the selected data
-    clf, pred = fit_and_predict(
-        features_train_selected, labels_train, features_test_selected, clf)
-elif best_score_gnb > best_score_ab:
-    print 'The best model was GaussianNB'
-    # Create GaussianNB's model
-    clf = GaussianNB()
-    # Select the best percentile
-    mask, features_train_selected, features_test_selected = select_best_perc(
-        selected_percentile_gnb, features_train, labels_train)
-    # Fit and predict with the selected data
-    clf, pred_nb = fit_and_predict(
-        features_train_selected, labels_train, features_test_selected, clf)
-else:
-    print 'The best model was AdaBoostClassifier'
-    # Create AdaBoostClassifier's model
-    clf = AdaBoostClassifier(n_estimators=selected_n_estimators)
-    # Select the best percentile
-    mask, features_train_selected, features_test_selected = select_best_perc(
-        selected_percentile_ab, features_train, labels_train)
-    # Fit and predict with the selected data
-    clf, pred = fit_and_predict(
-        features_train_selected, labels_train, features_test_selected, clf)
+# if (best_score_knn > best_score_dt) and (best_score_knn > best_score_gnb) and (
+#     best_score_knn > best_score_ab):
+#     print 'The best model was KNN'
+# Create KNNs's model
+clf = KNeighborsClassifier(n_neighbors=selected_neighbors,
+p=selected_distance)
+# Select the best features percentile
+mask, features_train_selected, features_test_selected, feature_scores = select_best_perc(
+    selected_percentile_knn, features_train, labels_train)
+# Fit and predict with the selected data
+clf, pred = fit_and_predict(
+    features_train_selected, labels_train, features_test_selected, clf)
+# elif (best_score_dt > best_score_gnb) and (best_score_dt > best_score_ab):
+#     print 'The best model was DecisionTree'
+#     # Create Decision Tree's model
+#     clf = DecisionTreeClassifier(
+#         min_samples_split=selected_min_samples_split)
+#     # Select the best percentile
+#     mask, features_train_selected, features_test_selected, feature_scores = select_best_perc(
+#         selected_percentile_dt, features_train, labels_train)
+#     # Fit and predict with the selected data
+#     clf, pred = fit_and_predict(
+#         features_train_selected, labels_train, features_test_selected, clf)
+# elif best_score_gnb > best_score_ab:
+#     print 'The best model was GaussianNB'
+#     # Create GaussianNB's model
+#     clf = GaussianNB()
+#     # Select the best percentile
+#     mask, features_train_selected, features_test_selected, feature_scores = select_best_perc(
+#         selected_percentile_gnb, features_train, labels_train)
+#     # Fit and predict with the selected data
+#     clf, pred_nb = fit_and_predict(
+#         features_train_selected, labels_train, features_test_selected, clf)
+# else:
+#     print 'The best model was AdaBoostClassifier'
+#     # Create AdaBoostClassifier's model
+#     clf = AdaBoostClassifier(n_estimators=selected_n_estimators)
+#     # Select the best percentile
+#     mask, features_train_selected, features_test_selected, feature_scores = select_best_perc(
+#         selected_percentile_ab, features_train, labels_train)
+#     # Fit and predict with the selected data
+#     clf, pred = fit_and_predict(
+#         features_train_selected, labels_train, features_test_selected, clf)
 
 # Features without poi and features selected
 new_features_list = np.array(features_list[1:])
 features_selected = new_features_list[mask]
 features_list = ['poi'] + list(features_selected)
+
+# Select features scores
+feature_scores_selected = feature_scores[mask]
 
 ### Return statistics about the dataset
 non_poi, poi = df.poi.value_counts()
@@ -251,20 +254,9 @@ lines, columns = df.shape[0], df.shape[1]
 print 'number of data points: %s' % (lines * columns)
 print 'number of POIs and non-POIs: %s, %s' % (poi, non_poi)
 print 'number of features used: %s' % len(features_list)
-print 'features with missing values: see plot'
-count_nan = []
-for label in df.columns:
-    miss_val = (df[label] == 0).sum(axis=0)
-    if df[label].dtype == 'bool':
-        count_nan.append(0)
-    else:
-        count_nan.append(miss_val)
-# Plot missing values distribution by columns
-# plt.bar(df.columns, count_nan)
-# plt.xlabel('Data columns', fontsize=10)
-# plt.ylabel('Proportion of missing data', fontsize=10)
-# plt.xticks(df.columns, df.columns, rotation=90, fontsize=8)
-# plt.show()
+print 'features used and there score:\n'
+for feature, score in zip(features_selected, feature_scores_selected):
+    print 'Feature: %s, Score: %s' %  (feature, score)
 
 #######################################################################
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
@@ -273,4 +265,4 @@ for label in df.columns:
 ### generates the necessary .pkl files for validating your results.
 
 dump_classifier_and_data(clf, my_dataset, features_list)
-test_classifier(clf, my_dataset, features_list)
+# test_classifier(clf, my_dataset, features_list)
